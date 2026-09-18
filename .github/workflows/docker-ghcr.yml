@@ -41,14 +41,15 @@ jobs:
         run: |
           docker pull ghcr.io/${{ github.repository }}:latest
           docker save ghcr.io/${{ github.repository }}:latest | gzip -1 > gridwise-bup-2026-docker-image.tar.gz
-      - name: Split Docker fallback image
-        run: split -b 300M -d -a 2 gridwise-bup-2026-docker-image.tar.gz gridwise-docker.part-
+      - name: Split Docker fallback image for downloadable artifacts
+        run: split -b 50M -d -a 2 gridwise-bup-2026-docker-image.tar.gz gridwise-docker.part-
       - name: Upload Docker image part 00
         uses: actions/upload-artifact@v4
         with:
           name: gridwise-docker-part-00
           path: gridwise-docker.part-00
           compression-level: 0
+          if-no-files-found: ignore
           retention-days: 7
       - name: Upload Docker image part 01
         uses: actions/upload-artifact@v4
@@ -56,6 +57,7 @@ jobs:
           name: gridwise-docker-part-01
           path: gridwise-docker.part-01
           compression-level: 0
+          if-no-files-found: ignore
           retention-days: 7
       - name: Upload Docker image part 02
         uses: actions/upload-artifact@v4
@@ -63,6 +65,7 @@ jobs:
           name: gridwise-docker-part-02
           path: gridwise-docker.part-02
           compression-level: 0
+          if-no-files-found: ignore
           retention-days: 7
       - name: Upload Docker image part 03
         uses: actions/upload-artifact@v4
@@ -70,4 +73,133 @@ jobs:
           name: gridwise-docker-part-03
           path: gridwise-docker.part-03
           compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Upload Docker image part 04
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-docker-part-04
+          path: gridwise-docker.part-04
+          compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Upload Docker image part 05
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-docker-part-05
+          path: gridwise-docker.part-05
+          compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Upload Docker image part 06
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-docker-part-06
+          path: gridwise-docker.part-06
+          compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Upload Docker image part 07
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-docker-part-07
+          path: gridwise-docker.part-07
+          compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Upload Docker image part 08
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-docker-part-08
+          path: gridwise-docker.part-08
+          compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Upload Docker image part 09
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-docker-part-09
+          path: gridwise-docker.part-09
+          compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Upload Docker image part 10
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-docker-part-10
+          path: gridwise-docker.part-10
+          compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Upload Docker image part 11
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-docker-part-11
+          path: gridwise-docker.part-11
+          compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Upload Docker image part 12
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-docker-part-12
+          path: gridwise-docker.part-12
+          compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Upload Docker image part 13
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-docker-part-13
+          path: gridwise-docker.part-13
+          compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Upload Docker image part 14
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-docker-part-14
+          path: gridwise-docker.part-14
+          compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Upload Docker image part 15
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-docker-part-15
+          path: gridwise-docker.part-15
+          compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Upload Docker image part 16
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-docker-part-16
+          path: gridwise-docker.part-16
+          compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Upload Docker image part 17
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-docker-part-17
+          path: gridwise-docker.part-17
+          compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Upload Docker image part 18
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-docker-part-18
+          path: gridwise-docker.part-18
+          compression-level: 0
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Upload Docker image part 19
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-docker-part-19
+          path: gridwise-docker.part-19
+          compression-level: 0
+          if-no-files-found: ignore
           retention-days: 7

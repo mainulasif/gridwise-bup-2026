@@ -283,10 +283,24 @@ docker run --rm -p 8000:8000 ghcr.io/mainulasif/gridwise-bup-2026:latest
 curl http://127.0.0.1:8000/health
 ```
 
-## Railway deployment
+## Cloud Deployment (Free & Paid Options)
 
+The application is stateless and containerized, making it easy to deploy to any Docker-compatible cloud host.
+
+### 1. Hugging Face Spaces (Highly Recommended / Best Free Option)
+Hugging Face Spaces provides a generous free tier (16 GB RAM) perfect for running the local PyTorch model without Out-Of-Memory (OOM) crashes.
+- Create a New Space and select **Docker** as the SDK.
+- Connect your GitHub repository to auto-deploy.
+- **Important Tweak:** Hugging Face exposes port `7860`. Go to your Space **Settings -> Variables and secrets**, and add a New Variable: `PORT = 7860`.
+- Your app will be live at a public `.hf.space` URL.
+
+### 2. Render.com (Free Tier)
+You can deploy for free as a Docker Web Service on Render. 
+- Connect your GitHub repository and select the **Free** tier. 
+- *Caveat:* The free tier is limited to 512 MB RAM. Since the app runs a language model, it might experience OOM (Out Of Memory) errors during deployment. Also, the instance sleeps after 15 minutes of inactivity, causing ~1-minute cold starts.
+
+### 3. Railway (If you have active credits)
 `railway.toml` configures Dockerfile builds, `/health` readiness checking, and restart behavior. Railway supplies `PORT` automatically.
-
 The repository contains no deployment-time secrets. Deploy the repository as one service, then generate one public Railway domain and submit that base URL.
 
 ## Repository structure

@@ -2,6 +2,14 @@
 
 LLM-assisted 24-hour smart-campus energy scheduling API for the BUP CSE Fest 2026 Hackathon preliminary round.
 
+## Live Deployment & Docker Registry
+
+- 🚀 **Live Production API:** [https://gridwise-api-live-production.up.railway.app](https://gridwise-api-live-production.up.railway.app)
+  - `GET /health`: [https://gridwise-api-live-production.up.railway.app/health](https://gridwise-api-live-production.up.railway.app/health)
+  - `POST /optimize-energy`: `https://gridwise-api-live-production.up.railway.app/optimize-energy`
+- 🐳 **Docker Hub Repository:** [https://hub.docker.com/r/azthebest/gridwise-bup-2026](https://hub.docker.com/r/azthebest/gridwise-bup-2026)
+- 📦 **GitHub Container Registry:** `ghcr.io/mainulasif/gridwise-bup-2026:latest`
+
 This repository implements the required pipeline:
 
 **operator notes -> local generative language model -> deterministic guardrails/normalization -> linear optimizer -> independent replay validation -> exact JSON response**
@@ -269,8 +277,10 @@ A GitHub Actions workflow at `.github/workflows/docker-ghcr.yml` builds and push
 
 ```text
 ghcr.io/mainulasif/gridwise-bup-2026:latest
-docker.io/YOUR_DOCKERHUB_USERNAME/gridwise-bup-2026:latest
+docker.io/azthebest/gridwise-bup-2026:latest
 ```
+
+- **Docker Hub URL:** [https://hub.docker.com/r/azthebest/gridwise-bup-2026](https://hub.docker.com/r/azthebest/gridwise-bup-2026)
 
 After the official submission deadline, make the repository public as required by the event rules and ensure the packages are publicly pullable for judge fallback access.
 
@@ -285,8 +295,8 @@ curl http://127.0.0.1:8000/health
 
 **From Docker Hub:**
 ```bash
-docker pull YOUR_DOCKERHUB_USERNAME/gridwise-bup-2026:latest
-docker run --rm -p 8000:8000 YOUR_DOCKERHUB_USERNAME/gridwise-bup-2026:latest
+docker pull azthebest/gridwise-bup-2026:latest
+docker run --rm -p 8000:8000 azthebest/gridwise-bup-2026:latest
 curl http://127.0.0.1:8000/health
 ```
 

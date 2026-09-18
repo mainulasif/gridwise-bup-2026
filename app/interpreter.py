@@ -43,18 +43,23 @@ class LocalFlanInterpreter:
         self.max_new_tokens = int(os.getenv("LLM_MAX_NEW_TOKENS", "128"))
         self._pipe = None
         self._lock = threading.Lock()
+        self._load_lock = threading.Lock()
 
     def load(self) -> None:
         if self._pipe is not None:
             return
-        from transformers import pipeline
-        self._pipe = pipeline(
-            "text2text-generation",
-            model=self.model_name,
-            tokenizer=self.model_name,
-            device=-1,
-        )
-        self._pipe("Return only: no_op", max_new_tokens=8, do_sample=False)
+        with self._load_lock:
+            if self._pipe is not None:
+                return
+            from transformers import pipeline
+            pipe = pipeline(
+                "text2text-generation",
+                model=self.model_name,
+                tokenizer=self.model_name,
+                device=-1,
+            )
+            pipe("Return only: no_op", max_new_tokens=8, do_sample=False)
+            self._pipe = pipe
 
     def infer(self, note: str, battery_capacity: float) -> RawLLMResult:
         self.load()

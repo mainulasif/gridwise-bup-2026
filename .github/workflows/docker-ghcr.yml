@@ -48,10 +48,33 @@ jobs:
         run: |
           docker pull ghcr.io/${{ github.repository }}:latest
           docker save ghcr.io/${{ github.repository }}:latest | gzip -1 > gridwise-bup-2026-docker-image.tar.gz
-      - name: Upload Docker fallback image
+      - name: Split Docker fallback image
+        run: split -b 300M -d -a 2 gridwise-bup-2026-docker-image.tar.gz gridwise-docker.part-
+      - name: Upload Docker image part 00
         uses: actions/upload-artifact@v4
         with:
-          name: gridwise-bup-2026-docker-image
-          path: gridwise-bup-2026-docker-image.tar.gz
+          name: gridwise-docker-part-00
+          path: gridwise-docker.part-00
+          compression-level: 0
+          retention-days: 7
+      - name: Upload Docker image part 01
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-docker-part-01
+          path: gridwise-docker.part-01
+          compression-level: 0
+          retention-days: 7
+      - name: Upload Docker image part 02
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-docker-part-02
+          path: gridwise-docker.part-02
+          compression-level: 0
+          retention-days: 7
+      - name: Upload Docker image part 03
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-docker-part-03
+          path: gridwise-docker.part-03
           compression-level: 0
           retention-days: 7

@@ -41,6 +41,17 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     return JSONResponse(status_code=status, content={"detail": "invalid request"})
 
 
+@app.get("/")
+def root():
+    return {
+        "service": "GridWise BUP CSE Fest 2026",
+        "status": "online",
+        "health": "/health",
+        "optimize_endpoint": "/optimize-energy",
+        "method": "POST",
+    }
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}

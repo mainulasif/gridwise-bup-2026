@@ -10,6 +10,15 @@ LLM-assisted 24-hour smart-campus energy scheduling API for the BUP CSE Fest 202
 - 🐳 **Docker Hub Repository:** [https://hub.docker.com/r/azthebest/gridwise-bup-2026](https://hub.docker.com/r/azthebest/gridwise-bup-2026)
 - 📦 **GitHub Container Registry:** `ghcr.io/mainulasif/gridwise-bup-2026:latest`
 
+## Verification & Submission Checklist
+
+- [x] **Live API Health Check:** `GET https://gridwise-api-live-production.up.railway.app/health` returns `{"status":"ok"}`.
+- [x] **Live Optimization API:** `POST https://gridwise-api-live-production.up.railway.app/optimize-energy` verified & passes public sample (matches 1262.0 BDT optimal cost).
+- [x] **Docker Image:** GitHub Actions workflow builds & pushes fallback image to Docker Hub (`azthebest/gridwise-bup-2026:latest`) and GHCR.
+- [x] **Security & Secret Safety:** No API keys, `.env` files, or secrets committed.
+- [ ] **3-Minute Video:** Recorded & uploaded (script available at [VIDEO_SCRIPT.md](file:///d:/Download/GridWise_Submission/GridWise_Submission/VIDEO_SCRIPT.md)).
+- [ ] **Repository Visibility:** Make repository **Public** immediately after the 11:00 PM submission deadline.
+
 This repository implements the required pipeline:
 
 **operator notes -> local generative language model -> deterministic guardrails/normalization -> linear optimizer -> independent replay validation -> exact JSON response**

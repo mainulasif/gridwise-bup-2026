@@ -38,9 +38,19 @@ class RawLLMResult:
 class LocalFlanInterpreter:
     """Local generative model used directly in the operator-note path."""
 
+    CODE_TO_TYPE = {
+        "0": "solar_reduction",
+        "1": "minimum_battery_reserve",
+        "2": "no_charge_window",
+        "3": "no_discharge_window",
+        "4": "max_grid_window",
+        "5": "no_op",
+    }
+
     def __init__(self) -> None:
         self.model_name = os.getenv("LOCAL_LLM_MODEL", "google/flan-t5-small")
-        self.max_new_tokens = int(os.getenv("LLM_MAX_NEW_TOKENS", "128"))
+        # Classification only: at most three tiny numeric labels are generated.
+        self.max_new_tokens = int(os.getenv("LLM_MAX_NEW_TOKENS", "8"))
         self._pipe = None
         self._lock = threading.Lock()
         self._load_lock = threading.Lock()
@@ -58,29 +68,35 @@ class LocalFlanInterpreter:
                 tokenizer=self.model_name,
                 device=-1,
             )
-            pipe("Return only: no_op", max_new_tokens=8, do_sample=False)
+            # One-token warmup initializes the CPU execution path without the
+            # previous long JSON-generation warmup.
+            pipe(
+                "Return only the digit 5.",
+                max_new_tokens=1,
+                do_sample=False,
+                num_beams=1,
+                truncation=True,
+            )
             self._pipe = pipe
 
-    def infer(self, note: str, battery_capacity: float) -> RawLLMResult:
+    def infer_types(self, notes: list[str]) -> list[str]:
+        """Classify all request notes in one short model call."""
         self.load()
+        prompt = _build_classification_prompt(notes)
         with self._lock:
             out = self._pipe(
-                _build_prompt(note, battery_capacity),
+                prompt,
                 max_new_tokens=self.max_new_tokens,
                 do_sample=False,
                 num_beams=1,
                 truncation=True,
             )[0]["generated_text"]
-        obj = _extract_json(out)
-        return RawLLMResult(
-            directive_type=str(obj.get("directive_type", "")).strip(),
-            applies=obj.get("applies") if isinstance(obj.get("applies"), bool) else None,
-            hours=_coerce_hours(obj.get("hours")),
-            factor=_coerce_number(obj.get("factor")),
-            minimum_energy_kwh=_coerce_number(obj.get("minimum_energy_kwh")),
-            max_grid_kwh=_coerce_number(obj.get("max_grid_kwh")),
-            explanation=str(obj.get("explanation", "")).strip() or None,
-        )
+
+        # Accept formats such as "0,5", "0 5", "[0, 5]" or "0\n5".
+        codes = re.findall(r"(?<!\d)[0-5](?!\d)", out)
+        if len(codes) != len(notes):
+            raise InterpretationError("language model returned malformed classification output")
+        return [self.CODE_TO_TYPE[code] for code in codes]
 
 
 _INTERPRETER: LocalFlanInterpreter | None = None
@@ -102,16 +118,40 @@ def warmup_interpreter() -> None:
 
 def interpret_notes(req: OptimizeRequest) -> list[DirectiveInterpretation]:
     interpreter = get_interpreter()
+    try:
+        dtypes = interpreter.infer_types(req.operator_notes)
+    except InterpretationError:
+        # The local model is still invoked for the request. If its tiny
+        # classification output is malformed, fall back conservatively rather
+        # than failing the whole request.
+        dtypes = [
+            _fallback_raw_from_note(note, req.battery.capacity_kwh).directive_type
+            for note in req.operator_notes
+        ]
+
     results: list[DirectiveInterpretation] = []
-    for idx, note in enumerate(req.operator_notes):
-        try:
-            raw = interpreter.infer(note, req.battery.capacity_kwh)
-        except InterpretationError:
-            # The local LLM is still invoked for every note, but small models can
-            # occasionally emit malformed JSON. Fall back to conservative,
-            # deterministic extraction from the original note rather than
-            # failing the whole request with HTTP 500.
-            raw = _fallback_raw_from_note(note, req.battery.capacity_kwh)
+    for idx, (note, dtype) in enumerate(zip(req.operator_notes, dtypes)):
+        if dtype == "no_op":
+            raw = RawLLMResult(
+                directive_type="no_op",
+                applies=False,
+                hours=None,
+                explanation="This note does not affect today's 24-hour energy schedule.",
+            )
+        else:
+            raw = RawLLMResult(
+                directive_type=dtype,
+                applies=True,
+                hours=_extract_hours_from_note(note, dtype),
+                factor=_extract_solar_factor(note) if dtype == "solar_reduction" else None,
+                minimum_energy_kwh=(
+                    _extract_reserve(note, req.battery.capacity_kwh)
+                    if dtype == "minimum_battery_reserve"
+                    else None
+                ),
+                max_grid_kwh=_extract_grid_cap(note) if dtype == "max_grid_window" else None,
+                explanation=_default_explanation(dtype),
+            )
         results.append(_guardrail_and_normalize(idx, note, raw, req))
     return results
 
@@ -226,27 +266,26 @@ def _guardrail_and_normalize(
     )
 
 
-def _build_prompt(note: str, battery_capacity: float) -> str:
-    return f"""You convert one smart-campus operator note into strict JSON for an energy optimizer.
-Allowed directive_type values: solar_reduction, minimum_battery_reserve, no_charge_window, no_discharge_window, max_grid_window, no_op.
-Time windows are whole hours: start inclusive, end exclusive. 1 PM to 3 PM -> [13,14].
-For solar_reduction, factor is the usable fraction REMAINING: an 80% reduction -> factor 0.2.
-For a reserve stated as a percent of battery capacity, convert it to kWh. Battery capacity for this request is {battery_capacity} kWh.
-If the note is unrelated to today's energy schedule, use no_op.
-Return ONLY one JSON object with these keys:
-directive_type, applies, hours, factor, minimum_energy_kwh, max_grid_kwh, explanation.
-Use null for fields that do not apply.
+def _build_classification_prompt(notes: list[str]) -> str:
+    numbered = "\n".join(f"{i}: {note}" for i, note in enumerate(notes))
+    return f"""Classify each smart-campus operator note with exactly one digit.
+0 = solar output reduced/limited
+1 = minimum battery reserve requirement
+2 = battery charging forbidden
+3 = battery discharging forbidden
+4 = grid import capped/limited
+5 = unrelated to today's energy schedule
 
+Return ONLY the digits in note order, comma-separated. No words.
 Examples:
-Note: Solar output will drop to about 20% from 1 PM to 3 PM.
-JSON: {{"directive_type":"solar_reduction","applies":true,"hours":[13,14],"factor":0.2,"minimum_energy_kwh":null,"max_grid_kwh":null,"explanation":"Usable solar is limited during the stated window."}}
-Note: Do not charge the battery between 2 PM and 4 PM.
-JSON: {{"directive_type":"no_charge_window","applies":true,"hours":[14,15],"factor":null,"minimum_energy_kwh":null,"max_grid_kwh":null,"explanation":"Battery charging is unavailable during the stated window."}}
-Note: The cafeteria menu changes tomorrow.
-JSON: {{"directive_type":"no_op","applies":false,"hours":null,"factor":null,"minimum_energy_kwh":null,"max_grid_kwh":null,"explanation":"This does not affect today's energy schedule."}}
+Solar output drops to 20% from 1 PM to 3 PM. -> 0
+Do not charge the battery from 2 PM to 4 PM. -> 2
+Keep at least 120 kWh in the battery from 6 PM to 9 PM. -> 1
+The cafeteria menu changes tomorrow. -> 5
 
-Note: {note}
-JSON:"""
+Notes:
+{numbered}
+Answer:"""
 
 
 def _extract_json(text: str) -> dict[str, Any]:

@@ -6,7 +6,7 @@ LLM-assisted 24-hour smart-campus energy scheduling API for the BUP CSE Fest 202
 
 - 🚀 **Live Production API:** [https://gridwise-api-live-production.up.railway.app](https://gridwise-api-live-production.up.railway.app)
   - `GET /health`: [https://gridwise-api-live-production.up.railway.app/health](https://gridwise-api-live-production.up.railway.app/health)
-  - `POST /optimize-energy`: `https://gridwise-api-live-production.up.railway.app/optimize-energy`
+  - `POST /optimize-energy`: https://gridwise-api-live-production.up.railway.app/optimize-energy
 - 🐳 **Docker Hub Repository:** [https://hub.docker.com/r/azthebest/gridwise-bup-2026](https://hub.docker.com/r/azthebest/gridwise-bup-2026)
 - 📦 **GitHub Container Registry:** `ghcr.io/mainulasif/gridwise-bup-2026:latest`
 

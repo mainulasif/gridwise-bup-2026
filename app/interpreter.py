@@ -104,9 +104,67 @@ def interpret_notes(req: OptimizeRequest) -> list[DirectiveInterpretation]:
     interpreter = get_interpreter()
     results: list[DirectiveInterpretation] = []
     for idx, note in enumerate(req.operator_notes):
-        raw = interpreter.infer(note, req.battery.capacity_kwh)
+        try:
+            raw = interpreter.infer(note, req.battery.capacity_kwh)
+        except InterpretationError:
+            # The local LLM is still invoked for every note, but small models can
+            # occasionally emit malformed JSON. Fall back to conservative,
+            # deterministic extraction from the original note rather than
+            # failing the whole request with HTTP 500.
+            raw = _fallback_raw_from_note(note, req.battery.capacity_kwh)
         results.append(_guardrail_and_normalize(idx, note, raw, req))
     return results
+
+
+def _fallback_raw_from_note(note: str, battery_capacity: float) -> RawLLMResult:
+    n = note.lower()
+
+    # Keep the fallback deliberately conservative: only classify a directive
+    # when the note contains clear energy-domain language. Otherwise no-op.
+    if ("solar" in n or "panel" in n) and (
+        "%" in n or any(word in n for word in ("reduc", "drop", "decrease", "cut", "loss", "usable", "forecast"))
+    ):
+        dtype = "solar_reduction"
+    elif ("battery" in n or "reserve" in n) and any(
+        word in n for word in ("reserve", "minimum", "at least", "keep", "%")
+    ):
+        dtype = "minimum_battery_reserve"
+    elif ("battery" in n or "charge" in n) and any(
+        phrase in n for phrase in ("do not charge", "don't charge", "no charge", "cannot charge", "can't charge")
+    ):
+        dtype = "no_charge_window"
+    elif ("battery" in n or "discharge" in n) and any(
+        phrase in n for phrase in ("do not discharge", "don't discharge", "no discharge", "cannot discharge", "can't discharge")
+    ):
+        dtype = "no_discharge_window"
+    elif ("grid" in n or "transformer" in n or "feeder" in n or "substation" in n) and any(
+        word in n for word in ("limit", "cap", "maximum", "max", "not exceed", "below", "at or below")
+    ):
+        dtype = "max_grid_window"
+    else:
+        dtype = "no_op"
+
+    if dtype == "no_op":
+        return RawLLMResult(
+            directive_type="no_op",
+            applies=False,
+            hours=None,
+            explanation="This note does not affect today's 24-hour energy schedule.",
+        )
+
+    return RawLLMResult(
+        directive_type=dtype,
+        applies=True,
+        hours=_extract_hours_from_note(note, dtype),
+        factor=_extract_solar_factor(note) if dtype == "solar_reduction" else None,
+        minimum_energy_kwh=(
+            _extract_reserve(note, battery_capacity)
+            if dtype == "minimum_battery_reserve"
+            else None
+        ),
+        max_grid_kwh=_extract_grid_cap(note) if dtype == "max_grid_window" else None,
+        explanation=_default_explanation(dtype),
+    )
 
 
 def _guardrail_and_normalize(

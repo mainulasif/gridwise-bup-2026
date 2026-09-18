@@ -1,0 +1,118 @@
+name: Export fallback image in chat-sized parts
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/export-fallback.yml
+
+permissions:
+  contents: read
+  packages: read
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Pull and split image
+        run: |
+          docker pull ghcr.io/${{ github.repository }}:latest
+          docker save ghcr.io/${{ github.repository }}:latest | gzip -1 > gridwise-bup-2026-docker-image.tar.gz
+          split -b 75M -d -a 2 gridwise-bup-2026-docker-image.tar.gz gridwise-small.part-
+      - name: Upload part 00
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-small-part-00
+          path: gridwise-small.part-00
+          compression-level: 0
+          retention-days: 2
+      - name: Upload part 01
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-small-part-01
+          path: gridwise-small.part-01
+          compression-level: 0
+          retention-days: 2
+      - name: Upload part 02
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-small-part-02
+          path: gridwise-small.part-02
+          compression-level: 0
+          retention-days: 2
+      - name: Upload part 03
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-small-part-03
+          path: gridwise-small.part-03
+          compression-level: 0
+          retention-days: 2
+      - name: Upload part 04
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-small-part-04
+          path: gridwise-small.part-04
+          compression-level: 0
+          retention-days: 2
+      - name: Upload part 05
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-small-part-05
+          path: gridwise-small.part-05
+          compression-level: 0
+          retention-days: 2
+      - name: Upload part 06
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-small-part-06
+          path: gridwise-small.part-06
+          compression-level: 0
+          retention-days: 2
+      - name: Upload part 07
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-small-part-07
+          path: gridwise-small.part-07
+          compression-level: 0
+          retention-days: 2
+      - name: Upload part 08
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-small-part-08
+          path: gridwise-small.part-08
+          compression-level: 0
+          retention-days: 2
+      - name: Upload part 09
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-small-part-09
+          path: gridwise-small.part-09
+          compression-level: 0
+          retention-days: 2
+      - name: Upload part 10
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-small-part-10
+          path: gridwise-small.part-10
+          compression-level: 0
+          retention-days: 2
+      - name: Upload part 11
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-small-part-11
+          path: gridwise-small.part-11
+          compression-level: 0
+          retention-days: 2
+      - name: Upload part 12
+        uses: actions/upload-artifact@v4
+        with:
+          name: gridwise-small-part-12
+          path: gridwise-small.part-12
+          compression-level: 0
+          retention-days: 2

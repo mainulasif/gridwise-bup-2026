@@ -263,23 +263,30 @@ When compatible directives overlap, the optimizer uses the most restrictive comb
 - A final replay validator independently checks the schedule before response serialization.
 - No raw exception stack traces are sent to clients.
 
-## Docker fallback image
+## Docker fallback images
 
-A GitHub Actions workflow at `.github/workflows/docker-ghcr.yml` builds and pushes:
+A GitHub Actions workflow at `.github/workflows/docker-ghcr.yml` builds and pushes the Docker image to **both** GitHub Container Registry and Docker Hub on every push to `main`:
 
 ```text
 ghcr.io/mainulasif/gridwise-bup-2026:latest
+docker.io/YOUR_DOCKERHUB_USERNAME/gridwise-bup-2026:latest
 ```
 
-and a commit-SHA-tagged image on every push to `main`.
+After the official submission deadline, make the repository public as required by the event rules and ensure the packages are publicly pullable for judge fallback access.
 
-After the official submission deadline, make the repository public as required by the event rules and ensure the GHCR package is also publicly pullable for judge fallback access.
+Example fallback commands:
 
-Example fallback command after the package is public:
-
+**From GitHub Container Registry:**
 ```bash
 docker pull ghcr.io/mainulasif/gridwise-bup-2026:latest
 docker run --rm -p 8000:8000 ghcr.io/mainulasif/gridwise-bup-2026:latest
+curl http://127.0.0.1:8000/health
+```
+
+**From Docker Hub:**
+```bash
+docker pull YOUR_DOCKERHUB_USERNAME/gridwise-bup-2026:latest
+docker run --rm -p 8000:8000 YOUR_DOCKERHUB_USERNAME/gridwise-bup-2026:latest
 curl http://127.0.0.1:8000/health
 ```
 

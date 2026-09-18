@@ -28,8 +28,6 @@ def _warm_model() -> None:
 
 @app.on_event("startup")
 def startup() -> None:
-    # Do not block HTTP startup on CPU model initialization. Railway can
-    # healthcheck immediately while the already-bundled local model warms.
     threading.Thread(target=_warm_model, name="llm-warmup", daemon=True).start()
     logger.info("GridWise HTTP service ready; language model warming in background")
 
@@ -55,6 +53,17 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/optimize-energy")
+def optimize_energy_info():
+    return {
+        "service": "GridWise BUP CSE Fest 2026",
+        "status": "online",
+        "endpoint": "/optimize-energy",
+        "method": "POST",
+        "message": "This endpoint is live. Send the competition scenario as a JSON POST request."
+    }
 
 
 @app.post("/optimize-energy", response_model=OptimizeResponse)

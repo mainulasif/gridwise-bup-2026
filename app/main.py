@@ -17,10 +17,20 @@ logger = logging.getLogger("gridwise")
 app = FastAPI(title="GridWise BUP CSE Fest 2026", version="1.0.0", docs_url=None, redoc_url=None)
 
 
+def _warm_model() -> None:
+    try:
+        warmup_interpreter()
+        logger.info("GridWise language model ready")
+    except Exception:
+        logger.exception("Background model warmup failed")
+
+
 @app.on_event("startup")
 def startup() -> None:
-    warmup_interpreter()
-    logger.info("GridWise service ready")
+    # Do not block HTTP startup on CPU model initialization. Railway can
+    # healthcheck immediately while the already-bundled local model warms.
+    threading.Thread(target=_warm_model, name="llm-warmup", daemon=True).start()
+    logger.info("GridWise HTTP service ready; language model warming in background")
 
 
 @app.exception_handler(RequestValidationError)

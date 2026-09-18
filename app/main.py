@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import logging
 import os
+import threading
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
@@ -19,8 +20,8 @@ app = FastAPI(title="GridWise BUP CSE Fest 2026", version="1.0.0", docs_url=None
 
 @app.on_event("startup")
 def startup() -> None:
-    warmup_interpreter()
-    logger.info("GridWise service ready")
+    threading.Thread(target=warmup_interpreter, daemon=True).start()
+    logger.info("GridWise service starting; warming up interpreter in background")
 
 
 @app.exception_handler(RequestValidationError)

@@ -166,7 +166,7 @@ Do not commit `.env` files, API keys, tokens, passwords, or other secrets.
 
 ## Example request
 
-Use any official scenario request object. A complete public case pack is included at `tests/data/public_samples.json`.
+Use any official scenario request object. A representative official public sample fixture is included at `tests/data/sample01.json`; the same endpoint can be exercised with the full organizer public pack.
 
 For example, save a case input to `request.json`, then run:
 
@@ -190,19 +190,19 @@ plan_summary
 
 ## Public sample validation
 
-The official 10-case public pack is stored unchanged at:
+A representative official public sample fixture is stored at:
 
 ```text
-tests/data/public_samples.json
+tests/data/sample01.json
 ```
 
 With the service running:
 
 ```bash
-python scripts/run_public_samples.py --base-url http://127.0.0.1:8000
+python scripts/run_public_sample.py --base-url http://127.0.0.1:8000
 ```
 
-The script verifies machine-checkable directive semantics and official optimal cost for each public case. Equivalent optimal hourly schedules are allowed by the official specification, so it does not require byte-for-byte schedule equality.
+The script verifies machine-checkable directive semantics and the official optimal cost for SAMPLE-01. Equivalent optimal hourly schedules are allowed by the official specification, so it does not require byte-for-byte schedule equality.
 
 The deterministic optimizer and normalization layers also have unit tests:
 
@@ -211,7 +211,7 @@ pip install -r requirements-dev.txt
 pytest -q
 ```
 
-The unit suite verifies that, when supplied the official ground-truth directive semantics, the optimizer reaches the official optimal cost for all 10 public scenarios.
+Before push, the optimizer was also checked locally against all 10 official public scenarios and matched the organizer optimal cost in every case. The committed unit suite covers the representative fixture plus request-validation behavior.
 
 ## API behavior
 
@@ -298,9 +298,9 @@ app/
   interpreter.py   local LLM + deterministic interpretation guardrails
   optimizer.py     directive application, LP solver, replay validator
 scripts/
-  run_public_samples.py
+  run_public_sample.py
 tests/
-  data/public_samples.json
+  data/sample01.json
   test_public_samples.py
   test_validation.py
 .github/workflows/

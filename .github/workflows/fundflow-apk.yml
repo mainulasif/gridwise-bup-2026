@@ -1,0 +1,37 @@
+name: FundFlow Android APK
+on:
+  push:
+    branches: [fundflow-apk-build-20261102]
+  workflow_dispatch:
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.10.2'
+      - name: Assemble a real Android APK
+        run: gradle -p fundflow-android :app:assembleDebug --no-daemon --stacktrace
+      - name: Upload ready APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: FundFlow-v1.4-real-APK
+          path: fundflow-android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+      - name: Emulator startup smoke test
+        continue-on-error: true
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          arch: x86_64
+          script: |
+            adb install fundflow-android/app/build/outputs/apk/debug/app-debug.apk
+            adb shell am start -W -n com.fundflow.wallet/.MainActivity
+            sleep 5
+            adb shell pidof com.fundflow.wallet
